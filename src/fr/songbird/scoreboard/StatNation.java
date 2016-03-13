@@ -17,7 +17,6 @@ import fr.songbird.survivalDevKit.listeners.MeterListener;
 
 
 /**
- * Une classe generatrice de scoreboards, c'est pas beau ca ? :D
  * <br>Lib utilisees:
  * <ul style="color:#0055AA">
  *     <li>Spigot api 1.8.8-R0.1</li>
@@ -59,165 +58,153 @@ public class StatNation implements MeterListener
 	
 	
 	public StatNation(){}
+	
+	
+	//#------ INNER CLASS ------#//
+	
+	class ObjectivesGenerator
+	{
+		String objectiveName, criteria;
+		int scoreNumber, indexScore, indexScoreArray;
+		String[] scoreNames;
+		
+		
+		public void prepareGeneration
+		(
+				final String objectiveName, 
+				final String criteria,
+				final int scoreNumber,
+				final int indexScore,
+				final int indexScoreArray,
+				final String...scoreNames
+		)
+		{
+			this.objectiveName = objectiveName;
+			this.criteria = criteria;
+			this.scoreNumber = scoreNumber;
+			this.indexScore = indexScore;
+			this.indexScoreArray = indexScoreArray;
+			this.scoreNames = scoreNames;
+		}
+		
+
+		
+		/**
+		 * Voici un exemple de generation de scoreboard:<br>
+		 * <pre>
+		 * 		try {
+				generateObjective
+				(
+					firstObjective,
+					ChatColor.BOLD+"DYNASTIUM",
+					"dummy",
+					19,
+					0,
+					0,
+					DisplaySlot.SIDEBAR,
+					"AQUACqt/j:"+ChatColor.RED+"YOLO",
+					"",
+					"YELLOWTimer:",
+					"",
+					"YELLOWPoints:",
+					"AQUALUTHA",
+					"GOLDGondar",
+					"",
+					"REDBoss:",
+					"AQUALUTHA",
+					"GOLDGONDAR",
+					"",
+					"YELLOWConquetes:",
+					"GOLDTherim",
+					"AQUADanok",
+					"GRAYDrustan",
+					"GRAYOlrik",
+					"GOLDDolium",
+					"AQUAWEEK"
+					
+					
+					
+					
+				);
+			} catch (ArrayIndexOutOfBoundsException | TooBigStringException aiobe_tbse) 
+			{
+				
+				aiobe_tbse.printStackTrace();
+		    }
+		 * </pre>
+		 * @param o L'objectif
+		 * @param objectiveName Le nom de l'objectif
+		 * @param criteria Le critere de l'objectif
+		 * @param scoreNumber Le nombre total de scores figurants sur le scoreboard (y compris les scores utilisés pour servir d'espaces)
+		 * @param indexScore A partir de quel index part le generateur <br><strong>Parametre inutile qui sera supprime a la prochaine mise a jour a mettre <mark>imperativement</mark> a 0</strong>
+		 * @param indexScoreArray Index a partir duquel l'ArrayList va commencer. (Si vous generez votre premier scoreboard, il est obligatoire de passer se parametre a 0)
+		 * @param scoreNames Parametre variable qui contiendra chaque nom des scores affiches dans le scoreboard
+		 * @throws ArrayIndexOutOfBoundsException
+		 * @throws TooBigStringException
+		 */
+		private void generateObjective() throws ArrayIndexOutOfBoundsException, TooBigStringException
+		{
+			
+			
+			objectives.put(objectiveName, board.registerNewObjective(objectiveName, criteria));
+			Objective o = objectives.get(objectiveName);
+			o.setDisplayName(objectiveName);
+			
+			if(indexScoreArray == scores.size())
+			{
+				scores.add(new ArrayList<Score>());
+			}
+			else
+			{
+				throw new ArrayIndexOutOfBoundsException();
+			}
+			
+			for(String string : scoreNames)
+			{
+				ChatColor color = getAdequateColor(string);
+				String sub = string.equals("") ? "" : string.substring(string.indexOf(colorPrefix)+(colorPrefix.length()));
+				if( sub.length() < 16)
+				{
+					if(getAdequateColor(string) != null)
+					{
+						scores.get(indexScoreArray).add(o.getScore(color+string.substring(string.indexOf(colorPrefix)+colorPrefix.length())));
+					}
+					else
+					{
+						scores.get(indexScoreArray).add(o.getScore(string));
+					}
+					System.out.println(indexScoreArray);
+					System.out.println(indexScore);
+					scores.get(indexScoreArray).get(indexScore).setScore(scoreNumber);
+					
+					indexScore++;
+					scoreNumber--;
+				}
+				else
+				{
+					new TooBigStringException("La chaine de caracteres ["+string+"] possede "+string.length()+"caracteres au lieu de 16.");
+				}
+				colorPrefix = "";
+
+			}
+			
+		}
+	}
 
 	
-	private void initializeObjectives()
+	private void initializeObjectives(ObjectivesGenerator...generators)
 	{
-		try {
-			generateObjective
-			(
-					ChatColor.RED+"DYNASTIUM",
-					"dummy",
-					5,
-					0,
-					0,
-					"BOLDCqt du jour:",
-					"YELLOW[Nom village]",
-					"",
-					"BOLDYouni-coins:",
-					"YELLOW[nombre points]"
-			);
-			generateObjective
-			(
-					ChatColor.DARK_RED+"DYNASTIUM",
-					"dummy",
-					4,
-					0,
-					1,
-					"BOLDPoints:",
-					"YELLOWLutha:",
-					"YELLOWGondar:",
-					"GREENTimer:"
-			);
-			StringBuffer buffer = new StringBuffer();
-			buffer.append(ChatColor.YELLOW);
-			buffer.append(ChatColor.BOLD);
-			buffer.append("Lieux:");
-			
-			generateObjective
-			(
-				buffer.toString(),
-				"dummy",
-				2,
-				0,
-				2,
-				"YELLOW[ile]",
-				"YELLOW[position]"
-			);
+		try 
+		{
+			for(ObjectivesGenerator generator : generators)
+			{
+				generator.generateObjective();
+			}
 		} catch (ArrayIndexOutOfBoundsException | TooBigStringException e) {
 			e.printStackTrace();
 		}
 		
 		scoreboardRotation();
-	}
-	
-	/**
-	 * Voici un exemple de generation de scoreboard:<br>
-	 * <pre>
-	 * 		try {
-			generateObjective
-			(
-				firstObjective,
-				ChatColor.BOLD+"DYNASTIUM",
-				"dummy",
-				19,
-				0,
-				0,
-				DisplaySlot.SIDEBAR,
-				"AQUACqt/j:"+ChatColor.RED+"YOLO",
-				"",
-				"YELLOWTimer:",
-				"",
-				"YELLOWPoints:",
-				"AQUALUTHA",
-				"GOLDGondar",
-				"",
-				"REDBoss:",
-				"AQUALUTHA",
-				"GOLDGONDAR",
-				"",
-				"YELLOWConquetes:",
-				"GOLDTherim",
-				"AQUADanok",
-				"GRAYDrustan",
-				"GRAYOlrik",
-				"GOLDDolium",
-				"AQUAWEEK"
-				
-				
-				
-				
-			);
-		} catch (ArrayIndexOutOfBoundsException | TooBigStringException aiobe_tbse) 
-		{
-			
-			aiobe_tbse.printStackTrace();
-	    }
-	 * </pre>
-	 * @param o L'objectif
-	 * @param objectiveName Le nom de l'objectif
-	 * @param criteria Le critere de l'objectif
-	 * @param scoreNumber Le nombre total de scores figurants sur le scoreboard (y compris les scores utilisés pour servir d'espaces)
-	 * @param indexScore A partir de quel index part le generateur <br><strong>Parametre inutile qui sera supprime a la prochaine mise a jour a mettre <mark>imperativement</mark> a 0</strong>
-	 * @param indexScoreArray Index a partir duquel l'ArrayList va commencer. (Si vous generez votre premier scoreboard, il est obligatoire de passer se parametre a 0)
-	 * @param scoreNames Parametre variable qui contiendra chaque nom des scores affiches dans le scoreboard
-	 * @throws ArrayIndexOutOfBoundsException
-	 * @throws TooBigStringException
-	 */
-	private void generateObjective
-	(
-			String objectiveName,
-			String criteria,
-			int scoreNumber,
-			int indexScore,
-			int indexScoreArray, //Le tableau de score que l'on va choisir dans l'ArrayList
-			String...scoreNames
-	) throws ArrayIndexOutOfBoundsException, TooBigStringException
-	{
-		
-		
-		objectives.put(objectiveName, board.registerNewObjective(objectiveName, criteria));
-		Objective o = objectives.get(objectiveName);
-		o.setDisplayName(objectiveName);
-		
-		if(indexScoreArray == scores.size())
-		{
-			scores.add(new ArrayList<Score>());
-		}
-		else
-		{
-			throw new ArrayIndexOutOfBoundsException();
-		}
-		
-		for(String string : scoreNames)
-		{
-			ChatColor color = getAdequateColor(string);
-			String sub = string.equals("") ? "" : string.substring(string.indexOf(colorPrefix)+(colorPrefix.length()));
-			if( sub.length() < 16)
-			{
-				if(getAdequateColor(string) != null)
-				{
-					scores.get(indexScoreArray).add(o.getScore(color+string.substring(string.indexOf(colorPrefix)+colorPrefix.length())));
-				}
-				else
-				{
-					scores.get(indexScoreArray).add(o.getScore(string));
-				}
-				System.out.println(indexScoreArray);
-				System.out.println(indexScore);
-				scores.get(indexScoreArray).get(indexScore).setScore(scoreNumber);
-				
-				indexScore++;
-				scoreNumber--;
-			}
-			else
-			{
-				new TooBigStringException("La chaine de caracteres ["+string+"] possede "+string.length()+"caracteres au lieu de 16.");
-			}
-			colorPrefix = "";
-
-		}
-		
 	}
 	
 	/**
@@ -501,7 +488,49 @@ public class StatNation implements MeterListener
 	public void initializeScoreboard()
 	{
 		meter.addMeterListener(this);
-		initializeObjectives();
+		ObjectivesGenerator userProfile_conquest = new ObjectivesGenerator();
+		userProfile_conquest.prepareGeneration
+		(
+				ChatColor.RED+"DYNASTIUM",
+				"dummy",
+				5,
+				0,
+				0,
+				"BOLDCqt du jour:",
+				"YELLOW[Nom village]",
+				"",
+				"BOLDYouni-coins:",
+				"YELLOW[nombre points]"
+		);
+		ObjectivesGenerator nationProfile = new ObjectivesGenerator();
+		nationProfile.prepareGeneration
+		(		
+				ChatColor.DARK_RED+"DYNASTIUM",
+				"dummy",
+				4,
+				0,
+				1,
+				"BOLDPoints:",
+				"YELLOWLutha:",
+				"YELLOWGondar:",
+				"GREENTimer:"
+		);
+		ObjectivesGenerator user_position = new ObjectivesGenerator();
+		StringBuffer buffer = new StringBuffer();
+		buffer.append(ChatColor.YELLOW);
+		buffer.append(ChatColor.BOLD);
+		buffer.append("Lieux:");
+		user_position.prepareGeneration
+		(				
+				buffer.toString(),
+				"dummy",
+				2,
+				0,
+				2,
+				"YELLOW[ile]",
+				"YELLOW[position]"
+		);
+		initializeObjectives(userProfile_conquest, nationProfile, user_position);
 	}
 
 
